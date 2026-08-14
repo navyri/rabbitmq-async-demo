@@ -1,12 +1,12 @@
 <p align='center'> 
-  <img src="https://capsule-render.vercel.app/api?type=waving&height=200&color=FF6600&text=RabbitMQ%20Async%20Demo&fontColor=FFFFFF&desc=Comunicacion%20Asincrona%20entre%20Microservicios&fontAlignY=30&descAlignY=54"/> 
+  <img src="https://capsule-render.vercel.app/api?type=waving&height=200&color=FF6600&text=RabbitMQ%20Async%20Demo&fontColor=FFFFFF&desc=Asynchronous%20Communication%20Between%20Microservices&fontAlignY=30&descAlignY=54"/> 
 </p>
 
 <p align="center">
   <a href="https://youtu.be/UeRYxGLPWK0" target="_blank" rel="noopener noreferrer">
     <img
       src="https://64.media.tumblr.com/e29ae5ec2a39de294d8722ecf312b5d3/7b273f38c55d349b-43/s2048x3072/89ad0a543624dcd3dec51c74ab221c6a7d1ec435.pnj"
-      alt="Anime image - Ver video de la presentacion"
+      alt="Anime image - Watch the presentation video"
       height="350"
     />
   </a>
@@ -16,19 +16,19 @@
   <img src="https://capsule-render.vercel.app/api?type=rect&height=5&color=FF6600&reversal=false&fontAlignY=40&fontColor=FFFFFF&fontSize=60"/>
 </p>
 
-# Comunicacion Asincrona entre Microservicios con RabbitMQ
+# Asynchronous Communication Between Microservices with RabbitMQ
 
-Ejemplo minimo y ejecutable de **comunicacion asincrona basada en eventos** entre dos microservicios independientes, desarrollado como material para una presentacion universitaria sobre RabbitMQ.
+Minimal, runnable example of **event-driven, asynchronous communication** between two independent microservices, built as material for a university presentation on RabbitMQ.
 
-> **Nota de seguridad:** este proyecto se conecta a un broker RabbitMQ alojado en la nube (CloudAMQP). La cadena de conexion es un secreto y se carga desde un archivo `.env` local que **nunca se versiona** (ver la seccion de [Variables de entorno](#variables-de-entorno)). Si una version anterior de este repositorio llego a tener una cadena de conexion real escrita directamente en el codigo, esa credencial debe rotarse desde el panel de CloudAMQP antes de hacer publico el repositorio.
+> **Security note:** this project connects to a cloud-hosted RabbitMQ broker (CloudAMQP). The connection string is a secret and is loaded from a local `.env` file that is **never committed** (see the [Environment variables](#environment-variables) section below). If an earlier version of this repo ever had a real connection string typed directly into the code, rotate that credential from the CloudAMQP dashboard before making the repo public.
 
-Este repositorio contiene:
+This repository contains:
 
-- Un servicio productor (`order-service`) construido con FastAPI que expone `POST /orders` y publica eventos de ordenes creadas.
-- Un servicio consumidor (`notification-service`), un worker independiente en Python que escucha esos eventos y simula el envio de notificaciones.
-- La configuracion de un broker RabbitMQ alojado en CloudAMQP, con exchange, cola principal y una cola de mensajes fallidos (dead-letter).
+- A producer service (`order-service`) built with FastAPI that exposes `POST /orders` and publishes order-created events.
+- A consumer service (`notification-service`), an independent Python worker that listens to those events and simulates sending notifications.
+- The configuration of a RabbitMQ broker hosted on CloudAMQP, with an exchange, a main queue, and a dead-letter queue for failed messages.
 
-## Estructura general del repositorio
+## Overall repository structure
 
 ```bash
 rabbitmq-async-demo/
@@ -49,30 +49,30 @@ rabbitmq-async-demo/
   <img src="https://capsule-render.vercel.app/api?type=rect&height=5&color=FF6600&reversal=false&fontAlignY=40&fontColor=FFFFFF&fontSize=60"/>
 </p>
 
-# Primer componente: order-service (productor)
+# First component: order-service (producer)
 
-En este componente se implemento el servicio productor, una API construida con FastAPI que recibe ordenes de un cliente, publica un evento `order.created` en RabbitMQ y responde de inmediato sin esperar a que el mensaje sea procesado.
+In this component the producer service was implemented, an API built with FastAPI that receives orders from a client, publishes an `order.created` event to RabbitMQ, and responds immediately without waiting for the message to be processed.
 
-Se realizaron las siguientes tareas:
+The following tasks were carried out:
 
-- Exposicion del endpoint `POST /orders`.
-- Publicacion del evento en el exchange `orders_exchange` con la routing key `order.created`.
-- Configuracion de mensajes persistentes (`delivery_mode=2`) para no perder ordenes ante un reinicio del broker.
-- Manejo de errores de conexion, retornando `503 Service Unavailable` si el broker no esta disponible al momento de publicar.
+- Exposing the `POST /orders` endpoint.
+- Publishing the event to the `orders_exchange` exchange with the `order.created` routing key.
+- Configuring persistent messages (`delivery_mode=2`) so orders are not lost if the broker restarts.
+- Handling connection errors, returning `503 Service Unavailable` if the broker is unavailable at the time of publishing.
 
-## Archivos principales del primer componente
+## Main files of the first component
 
 - `order-service/main.py`
 - `order-service/requirements.txt`
 - `order-service/.env.example`
 
-## Ejemplo de uso del primer componente
+## Usage example for the first component
 
 **macOS / Linux**
 
 ```bash
 cd order-service
-cp .env.example .env   # luego editar .env con la URL real de CloudAMQP
+cp .env.example .env   # then edit .env with your real CloudAMQP URL
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -83,7 +83,7 @@ uvicorn main:app --reload --port 8000
 
 ```powershell
 cd order-service
-Copy-Item .env.example .env   # luego editar .env con la URL real de CloudAMQP
+Copy-Item .env.example .env   # then edit .env with your real CloudAMQP URL
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -94,30 +94,30 @@ uvicorn main:app --reload --port 8000
   <img src="https://capsule-render.vercel.app/api?type=rect&height=5&color=FF6600&reversal=false&fontAlignY=40&fontColor=FFFFFF&fontSize=60"/>
 </p>
 
-# Segundo componente: notification-service (consumidor)
+# Second component: notification-service (consumer)
 
-En este componente se implemento el servicio consumidor, un worker independiente que escucha la cola de RabbitMQ y simula el envio de una notificacion (por ejemplo, un correo) por cada orden recibida.
+In this component the consumer service was implemented, an independent worker that listens to the RabbitMQ queue and simulates sending a notification (for example, an email) for every order it receives.
 
-Se realizaron las siguientes tareas:
+The following tasks were carried out:
 
-- Consumo de mensajes desde `orders_queue`, con `prefetch_count=1` para distribuir la carga de forma equitativa si se agregan mas instancias.
-- Validacion de idempotencia por `order_id`, evitando notificaciones duplicadas ante una redelivery.
-- Manejo de mensajes malformados: si el JSON no es valido, el mensaje se envia a la cola de dead-letter en lugar de detener el worker.
-- Registro de logs estructurados con marca de tiempo para cada notificacion procesada.
+- Consuming messages from `orders_queue`, with `prefetch_count=1` to distribute the load evenly if more instances are added.
+- Idempotency validation by `order_id`, avoiding duplicate notifications on redelivery.
+- Handling malformed messages: if the JSON is invalid, the message is sent to the dead-letter queue instead of stopping the worker.
+- Structured logging with timestamps for every notification processed.
 
-## Archivos principales del segundo componente
+## Main files of the second component
 
 - `notification-service/consumer.py`
 - `notification-service/requirements.txt`
 - `notification-service/.env.example`
 
-## Ejemplo de uso del segundo componente
+## Usage example for the second component
 
 **macOS / Linux**
 
 ```bash
 cd notification-service
-cp .env.example .env   # luego editar .env con la URL real de CloudAMQP
+cp .env.example .env   # then edit .env with your real CloudAMQP URL
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -128,7 +128,7 @@ python consumer.py
 
 ```powershell
 cd notification-service
-Copy-Item .env.example .env   # luego editar .env con la URL real de CloudAMQP
+Copy-Item .env.example .env   # then edit .env with your real CloudAMQP URL
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -139,45 +139,45 @@ python consumer.py
   <img src="https://capsule-render.vercel.app/api?type=rect&height=5&color=FF6600&reversal=false&fontAlignY=40&fontColor=FFFFFF&fontSize=60"/>
 </p>
 
-# Tercer componente: broker de mensajeria (RabbitMQ / CloudAMQP)
+# Third component: message broker (RabbitMQ / CloudAMQP)
 
-En el tercer componente se configuro el broker que conecta a los dos servicios sin que estos se comuniquen directamente entre si. La demo usa una instancia de RabbitMQ alojada en CloudAMQP, a la que ambos servicios se conectan por AMQPS (TLS).
+In the third component, the broker that connects the two services without them talking to each other directly was configured. The demo uses a RabbitMQ instance hosted on CloudAMQP, which both services connect to over AMQPS (TLS).
 
 ```
-Cliente --HTTP POST /orders--> [order-service] --publica--> [orders_exchange]
+Client --HTTP POST /orders--> [order-service] --publishes--> [orders_exchange]
                                                                     |
                                                        routing key: order.created
                                                                     v
                                                             [orders_queue] --> [notification-service]
                                                                     |
-                                                       (ante fallo) v
+                                                        (on failure) v
                                                             [orders_dlx] --> [orders_queue_dlq]
 ```
 
-Se realizaron las siguientes tareas:
+The following tasks were carried out:
 
-- Creacion del exchange `orders_exchange` (tipo `direct`), durable.
-- Creacion de la cola `orders_queue`, durable, enlazada con la routing key `order.created`.
-- Configuracion de dead-lettering: todo mensaje rechazado (`nack`, `requeue=False`) se enruta a traves del exchange fanout `orders_dlx` hacia la cola `orders_queue_dlq`, en vez de perderse o reintentarse indefinidamente.
+- Creation of the `orders_exchange` exchange (type `direct`), durable.
+- Creation of the `orders_queue` queue, durable, bound with the `order.created` routing key.
+- Dead-letter configuration: any rejected message (`nack`, `requeue=False`) is routed through the `orders_dlx` fanout exchange into the `orders_queue_dlq` queue, instead of being lost or retried indefinitely.
 
-## Variables de entorno
+## Environment variables
 
-Toda la configuracion se inyecta por variables de entorno, nada esta escrito directamente en el codigo, y ninguna credencial real se versiona.
+All configuration is injected through environment variables, nothing is hardcoded in the source code, and no real credential is ever committed.
 
-| Variable | Usada por | Obligatoria | Proposito |
+| Variable | Used by | Required | Purpose |
 |---|---|---|---|
-| `RABBITMQ_URL` | ambos servicios | Si, sin valor por defecto | URI AMQPS completa del panel de CloudAMQP (`amqps://usuario:clave@host/vhost`) |
-| `EXCHANGE_NAME` | ambos servicios | No (`orders_exchange`) | Nombre del exchange |
-| `ROUTING_KEY` | ambos servicios | No (`order.created`) | Routing key / binding key |
+| `RABBITMQ_URL` | both services | Yes, no default value | Full AMQPS URI from the CloudAMQP dashboard (`amqps://user:password@host/vhost`) |
+| `EXCHANGE_NAME` | both services | No (`orders_exchange`) | Exchange name |
+| `ROUTING_KEY` | both services | No (`order.created`) | Routing key / binding key |
 
-Cada servicio carga estas variables desde un archivo `.env` local (via `python-dotenv`) si existe, o desde variables ya exportadas en la shell. **Si `RABBITMQ_URL` no esta definida, el servicio lanza un error de inmediato en lugar de arrancar**, para que una credencial faltante nunca pase desapercibida.
+Each service loads these variables from a local `.env` file (via `python-dotenv`) if one exists, or from variables already exported in the shell. **If `RABBITMQ_URL` is not set, the service raises an error immediately instead of starting**, so a missing credential is never silently ignored.
 
 **macOS / Linux**
 
 ```bash
 cd order-service
 cp .env.example .env
-# ahora abrir .env y pegar la cadena de conexion real de CloudAMQP
+# now open .env and paste the real CloudAMQP connection string
 ```
 
 **Windows (PowerShell)**
@@ -185,27 +185,27 @@ cp .env.example .env
 ```powershell
 cd order-service
 Copy-Item .env.example .env
-# ahora abrir .env y pegar la cadena de conexion real de CloudAMQP
+# now open .env and paste the real CloudAMQP connection string
 ```
 
-Repetir lo mismo dentro de `notification-service/`. `.env` esta listado en `.gitignore`, por lo que `git status` nunca deberia mostrarlo como archivo nuevo.
+Repeat the same inside `notification-service/`. `.env` is listed in `.gitignore`, so `git status` should never show it as a new file.
 
 <p align='center'>
   <img src="https://capsule-render.vercel.app/api?type=rect&height=5&color=FF6600&reversal=false&fontAlignY=40&fontColor=FFFFFF&fontSize=60"/>
 </p>
 
-# Como ejecutar el proyecto completo
+# How to run the whole project
 
-Se necesitan Python 3.11+ y una instancia de CloudAMQP. El broker esta alojado en CloudAMQP, por lo que **no se requiere una instalacion local de RabbitMQ**.
+Python 3.11+ and a CloudAMQP instance are required. The broker is hosted on CloudAMQP, so **no local RabbitMQ installation is needed**.
 
-Elegir el bloque segun el sistema operativo. Ambos hacen exactamente lo mismo en tres terminales separadas: iniciar el consumidor, iniciar la API, y luego enviar una orden de prueba.
+Pick the block that matches your OS. Both do exactly the same three things, in three separate terminals: start the consumer, start the API, then send a test order.
 
 ### macOS / Linux
 
 ```bash
-# Terminal 1 - notification-service (consumidor)
+# Terminal 1 - notification-service (consumer)
 cd notification-service
-cp .env.example .env   # luego editar .env con la URL real de CloudAMQP
+cp .env.example .env   # then edit .env with your real CloudAMQP URL
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -213,9 +213,9 @@ python consumer.py
 ```
 
 ```bash
-# Terminal 2 - order-service (productor/API)
+# Terminal 2 - order-service (producer/API)
 cd order-service
-cp .env.example .env   # luego editar .env con la URL real de CloudAMQP
+cp .env.example .env   # then edit .env with your real CloudAMQP URL
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -223,7 +223,7 @@ uvicorn main:app --reload --port 8000
 ```
 
 ```bash
-# Terminal 3 - orden de prueba
+# Terminal 3 - send a test order
 curl -X POST http://localhost:8000/orders \
   -H "Content-Type: application/json" \
   -d '{"customer_name": "Maria Gomez", "items": ["Wireless Mouse", "USB-C Cable"], "total": 49.98}'
@@ -231,12 +231,12 @@ curl -X POST http://localhost:8000/orders \
 
 ### Windows (PowerShell)
 
-PowerShell es la terminal por defecto en Windows 10/11 (Inicio → "Terminal"). Si al activar el entorno virtual aparece un error sobre la ejecucion de scripts deshabilitada, ejecutar una vez por sesion de terminal: `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`. Si `python` no es reconocido, probar con `py -3` (el Python Launcher para Windows).
+PowerShell is the default terminal on Windows 10/11 (Start → "Terminal"). If activating the virtual environment fails with a message about running scripts being disabled, run this once per terminal session first: `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`. If `python` isn't recognized, try `py -3` instead (the Python Launcher for Windows).
 
 ```powershell
-# Terminal 1 - notification-service (consumidor)
+# Terminal 1 - notification-service (consumer)
 cd notification-service
-Copy-Item .env.example .env   # luego editar .env con la URL real de CloudAMQP
+Copy-Item .env.example .env   # then edit .env with your real CloudAMQP URL
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -244,9 +244,9 @@ python consumer.py
 ```
 
 ```powershell
-# Terminal 2 - order-service (productor/API)
+# Terminal 2 - order-service (producer/API)
 cd order-service
-Copy-Item .env.example .env   # luego editar .env con la URL real de CloudAMQP
+Copy-Item .env.example .env   # then edit .env with your real CloudAMQP URL
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -254,14 +254,14 @@ uvicorn main:app --reload --port 8000
 ```
 
 ```powershell
-# Terminal 3 - orden de prueba
+# Terminal 3 - send a test order
 curl.exe -X POST "http://localhost:8000/orders" -H "Content-Type: application/json" --data-binary "@order.json"
 ```
-> Usar `curl.exe`, no `curl` a secas — en PowerShell, `curl` es un alias de `Invoke-WebRequest`, que no acepta los mismos flags y falla con `-X`/`-d`.
+> Use `curl.exe`, not plain `curl` — in PowerShell, `curl` is an alias for `Invoke-WebRequest`, which doesn't accept the same flags and will error out on `-X`/`-d`.
 
-Usando **Command Prompt (cmd.exe)** en lugar de PowerShell? Activar el entorno con `.venv\Scripts\activate.bat` y usar `copy` en vez de `Copy-Item` — el resto es identico a lo anterior.
+Using **Command Prompt (cmd.exe)** instead? Activate with `.venv\Scripts\activate.bat` and use `copy` instead of `Copy-Item` — everything else above is identical.
 
-**Entrada esperada** (`POST /orders`):
+**Expected input** (`POST /orders` body):
 
 ```json
 {
@@ -271,68 +271,68 @@ Usando **Command Prompt (cmd.exe)** en lugar de PowerShell? Activar el entorno c
 }
 ```
 
-**Salida esperada** (respuesta HTTP inmediata):
+**Expected output** (HTTP response, returned immediately):
 
 ```json
 { "order_id": "b3f1...", "status": "queued" }
 ```
 
-**Efecto secundario esperado** (logs de `notification-service` momentos despues):
+**Expected side effect** (in the `notification-service` logs, a moment later):
 
 ```
 [notification-service] Notification sent to Maria Gomez: your order b3f1... ($49.98) was received.
 ```
 
-Tambien se puede abrir la UI de administracion de RabbitMQ de la instancia desde el panel de CloudAMQP (`https://customer.cloudamqp.com` → tu instancia) para ver el exchange, la cola y las tasas de mensajes en tiempo real.
+You can also open your instance's RabbitMQ management UI from the CloudAMQP dashboard (`https://customer.cloudamqp.com` → your instance) to see the exchange, the queue, and the message rates in real time.
 
-Para detener los servicios, presionar `CTRL+C` en cada terminal. Las colas y los mensajes permanecen en CloudAMQP.
+To stop the services, press `CTRL+C` in each terminal. The queues and messages remain in CloudAMQP.
 
 <p align='center'>
   <img src="https://capsule-render.vercel.app/api?type=rect&height=5&color=FF6600&reversal=false&fontAlignY=40&fontColor=FFFFFF&fontSize=60"/>
 </p>
 
-# Manejo de errores
+# Error handling
 
-| Error | Causa | Como se maneja |
+| Error | Cause | How it's handled |
 |---|---|---|
-| `RABBITMQ_URL is not set` al iniciar | No se creo el `.env`, o la variable no fue exportada | El servicio se niega a iniciar e imprime que hacer, en lugar de fallar despues con un error de conexion confuso |
-| `Connection refused` / timeout | El broker tarda un momento en responder por internet | `pika.URLParameters` mas un bucle de reintento con backoff en el codigo de ambos servicios |
-| Notificacion duplicada para la misma orden | Un mensaje es redelivered (por ejemplo, el consumidor se cayo antes de hacer ack) | Verificacion de idempotencia usando `order_id` antes de enviar la notificacion |
-| Cuerpo de mensaje malformado | Un bug del productor envia un JSON invalido | El consumidor captura el error de parseo y enruta el mensaje a la cola de dead-letter en vez de fallar |
-| Broker inalcanzable al publicar | La instancia de CloudAMQP esta caida o falla la red | `order-service` retorna `503 Service Unavailable` en lugar de perder la orden silenciosamente |
-| `python -m venv .venv` se queda colgado y termina en `KeyboardInterrupt` en Windows | Problema conocido de `ensurepip` al crear el entorno virtual sobre ciertas versiones de Python (por ejemplo Python 3.14) en Windows; el subproceso que instala `pip` no responde | Borrar la carpeta `.venv` y volver a crear el entorno: `Remove-Item -Recurse -Force .venv` y luego `python -m venv .venv` de nuevo |
+| `RABBITMQ_URL is not set` on startup | `.env` wasn't created, or the variable wasn't exported | The service refuses to start and prints exactly what to do, instead of failing later with a confusing connection error |
+| `Connection refused` / timeout | The broker takes a moment to respond over the internet | `pika.URLParameters` plus a retry loop with backoff in both services' code |
+| Duplicate notification for the same order | A message is redelivered (e.g. the consumer crashed before acking) | Idempotency check using `order_id` before sending the notification |
+| Malformed message body | A producer bug sends invalid JSON | The consumer catches the parsing error and routes the message to the dead-letter queue instead of crashing |
+| Broker unreachable when publishing | The CloudAMQP instance is down or the network fails | `order-service` returns `503 Service Unavailable` instead of silently losing the order |
+| `python -m venv .venv` hangs and ends in `KeyboardInterrupt` on Windows | A known issue with `ensurepip` when creating the virtual environment on certain Python versions (for example Python 3.14) on Windows; the subprocess that installs `pip` stops responding | Delete the `.venv` folder and recreate the environment: `Remove-Item -Recurse -Force .venv` and then `python -m venv .venv` again |
 
 <p align='center'>
   <img src="https://capsule-render.vercel.app/api?type=rect&height=5&color=FF6600&reversal=false&fontAlignY=40&fontColor=FFFFFF&fontSize=60"/>
 </p>
 
-# Decisiones tecnicas
+# Technical decisions
 
-- Exchange `direct` con routing key explicita en lugar de publicar directamente a una cola, lo que desacopla al productor de los nombres de cola y permite agregar mas consumidores/colas despues sin tocar `order-service`.
-- Exchange durable, cola durable y mensajes persistentes (`delivery_mode=2`) para no perder ordenes ante un reinicio del broker.
-- Exchange y cola de dead-letter para que los mensajes fallidos sean inspeccionables en vez de perderse o reintentarse indefinidamente.
-- `prefetch_count=1` en el consumidor para distribuir la carga de forma equitativa si se agregan mas instancias (escalado horizontal).
-- Sin credenciales hardcodeadas, nunca: `RABBITMQ_URL` no tiene valor por defecto en el codigo, solo se lee desde `.env` (local, gitignored) o desde el entorno.
+- **`direct` exchange with an explicit routing key** instead of publishing straight to a queue — this keeps the producer decoupled from queue names and makes it possible to add more consumers/queues later without changing `order-service`.
+- **Durable exchange, durable queue, persistent messages** (`delivery_mode=2`) so orders are not lost if the broker restarts.
+- **Dead-letter exchange/queue** so failed messages are inspectable instead of silently dropped or retried forever.
+- **`prefetch_count=1`** on the consumer so messages are distributed fairly if more consumer instances are added later (horizontal scaling).
+- **No hardcoded credentials, ever** — `RABBITMQ_URL` has no default value in code; it is only ever read from `.env` (local, gitignored) or the environment.
 
-# Buenas practicas aplicadas
+# Best practices applied
 
-- Procesamiento de mensajes idempotente.
-- Manejo explicito de errores y dead-lettering en lugar de fallos silenciosos.
-- Configuracion por variables de entorno, cargadas desde un `.env` gitignored, nunca hardcodeada ni commiteada.
-- Cada servicio tiene su propio `requirements.txt` y puede desplegarse de forma independiente (despliegue independiente, principio central de microservicios).
-- Logging estructurado con marca de tiempo en ambos servicios.
+- Idempotent message processing.
+- Explicit error handling and dead-lettering instead of silent failures.
+- Configuration via environment variables, loaded from a gitignored `.env` file — never hardcoded, never committed.
+- Each service has its own `requirements.txt` and can be deployed independently (independent deployability, a core microservices principle).
+- Structured logging with timestamps on both services.
 
-# Limitaciones conocidas
+# Known limitations
 
-- La verificacion de idempotencia se guarda en memoria, por lo que se reinicia si el servicio de notificaciones se reinicia; un sistema en produccion persistiria los IDs procesados en Redis o una base de datos.
-- Las notificaciones se simulan con una linea de log, sin integracion real con un proveedor de correo/SMS.
-- Hay una unica instancia de consumidor; no se realizo prueba de carga para medir el throughput bajo trafico alto.
+- The idempotency check is stored in memory, so it resets if the notification service restarts; a production system would persist processed IDs in Redis or a database.
+- Notifications are simulated with a log line, not a real email/SMS provider integration.
+- There is a single consumer instance; no load test was performed to measure throughput under heavy traffic.
 
 <p align='center'>
   <img src="https://capsule-render.vercel.app/api?type=rect&height=5&color=FF6600&reversal=false&fontAlignY=40&fontColor=FFFFFF&fontSize=60"/>
 </p>
 
-# Tecnologias utilizadas
+# Technologies used
 
 - Python
 - FastAPI
@@ -340,12 +340,12 @@ Para detener los servicios, presionar `CTRL+C` en cada terminal. Las colas y los
 - RabbitMQ
 - CloudAMQP
 
-# Notas
+# Notes
 
-- El repositorio incluye el desarrollo correspondiente a los dos servicios y a la configuracion del broker.
-- El archivo `.env` real no se versiona; solo se incluye `.env.example` en cada servicio.
-- Las capturas de pantalla y evidencia de ejecucion (terminales, `curl`, logs del consumidor y la UI de administracion de RabbitMQ) deben agregarse antes de la entrega.
-- Para ejecutar correctamente el proyecto es necesario contar con una instancia de CloudAMQP activa y su cadena de conexion configurada en `.env`.
+- The repository includes the development corresponding to both services and the broker configuration.
+- The real `.env` file is never committed; only `.env.example` is included for each service.
+- Screenshots and execution evidence (terminal output, `curl`, consumer logs, and the RabbitMQ management UI) should be added before submission.
+- To run the project correctly, an active CloudAMQP instance is required, with its connection string configured in `.env`.
 
 <p align='center'>
   <img src="https://capsule-render.vercel.app/api?type=rect&height=5&color=FF6600&reversal=false&fontAlignY=40&fontColor=FFFFFF&fontSize=60"/>
