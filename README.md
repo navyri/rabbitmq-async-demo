@@ -226,7 +226,7 @@ uvicorn main:app --reload --port 8000
 # Terminal 3 - send a test order
 curl -X POST http://localhost:8000/orders \
   -H "Content-Type: application/json" \
-  -d '{"customer_name": "Maria Gomez", "items": ["Wireless Mouse", "USB-C Cable"], "total": 49.98}'
+  -d '{"customer_name": "Mariana Es", "items": ["Wireless Mouse", "USB-C Cable"], "total": 49.98}'
 ```
 
 ### Windows (PowerShell)
